@@ -50,6 +50,7 @@ On Windows, you can install GCC via MSYS2 or MinGW (and then the manual gcc comm
 
 ```bash
 make clean     # remove old builds
+make distclean # removes build folder entirely
 make           # compile the project
 make run       # run the compiled program
 ```
