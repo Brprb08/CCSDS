@@ -65,10 +65,8 @@ int main(void)
         }
     }
 
-    uint8_t sec_len = 8;
-
     // Encode
-    size_t bytes_written = encode_ccsds_packet(raw, &header, &sec_header, sec_len, NULL, 0);
+    size_t bytes_written = encode_ccsds_packet(raw, &header, &sec_header, CCSDS_SECONDARY_HEADER_SIZE, NULL, 0);
 
     printf("Encoded header bytes: ");
     for (size_t i = 0; i < bytes_written; i++)

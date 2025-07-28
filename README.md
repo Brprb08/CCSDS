@@ -24,8 +24,21 @@ Most satellites and ground systems use some variation of it, so it’s a good fo
 
 ## Tests
 
-**Tests are not working at the moment, will be fixed in next commit.**  
-_This message will be gone when that happens._
+The project includes a small test suite to verify header packing/unpacking.
+
+Run the tests with:
+
+```bash
+make test
+```
+
+If everything is correct, you’ll see ✅ messages for each test and:
+
+```
+All tests passed!
+```
+
+at the end.
 
 ## Building
 
@@ -40,6 +53,8 @@ make clean     # remove old builds
 make           # compile the project
 make run       # run the compiled program
 ```
+
+_(Use `make test` to run the test suite, see the Tests section above.)_
 
 ### Compiling manually with gcc
 
