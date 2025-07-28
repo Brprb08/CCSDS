@@ -31,6 +31,8 @@ Right now you can just build it with `gcc`:
 **Tests are not working at the moment, will be fixed in next commit.**  
 _This message will be gone when that happens._
 
+## How to run
+
 ```bash
 make clean
 make
