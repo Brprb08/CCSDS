@@ -1,0 +1,19 @@
+``` .gitignore
+
+# Compiled object files
+*.o
+
+# Executables
+a.out
+ccsds
+
+# Debug files
+*.log
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# OS-specific junk
+.DS_Store
+Thumbs.db
