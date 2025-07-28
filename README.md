@@ -27,12 +27,23 @@ Most satellites and ground systems use some variation of it, so it’s a good fo
 **Tests are not working at the moment, will be fixed in next commit.**  
 _This message will be gone when that happens._
 
-## Use the provided Makefile:
+## Building
 
-> This Makefile assumes a Unix-like shell (Linux/macOS/WSL).
+You’ll need a C compiler (GCC or Clang).
+On Linux/macOS this is usually pre‑installed or easy to get.
+On Windows, you can install GCC via MSYS2 or MinGW (and then the manual gcc command below will work fine).
+
+### Using the Makefile (Linux/macOS/WSL only):
 
 ```bash
 make clean     # remove old builds
 make           # compile the project
 make run       # run the compiled program
+```
+
+### Compiling manually with gcc
+
+```bash
+gcc -Wall -Wextra -std=c11 -Iinclude src/ccsds.c main.c -o ccsds_demo
+./ccsds_demo
 ```
