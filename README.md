@@ -22,10 +22,6 @@ Most satellites and ground systems use some variation of it, so it’s a good fo
 - Write unit tests and fuzz tests for decoding
 - Maybe turn this into a tiny CLI tool for inspecting CCSDS packets
 
-## Building
-
-Right now you can just build it with `gcc`:
-
 ## Tests
 
 **Tests are not working at the moment, will be fixed in next commit.**  
