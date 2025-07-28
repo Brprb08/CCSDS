@@ -31,11 +31,12 @@ Right now you can just build it with `gcc`:
 **Tests are not working at the moment, will be fixed in next commit.**  
 _This message will be gone when that happens._
 
-## How to run
+## Use the provided Makefile:
+
+> This Makefile assumes a Unix-like shell (Linux/macOS/WSL).
 
 ```bash
-make clean
-make
-make run
-./ccsds
+make clean     # remove old builds
+make           # compile the project
+make run       # run the compiled program
 ```
