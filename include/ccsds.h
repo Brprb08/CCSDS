@@ -60,19 +60,17 @@ typedef struct
 /*
  * Error codes for CCSDS operations
  */
-typedef enum
-{
+typedef enum {
     CCSDS_OK = 0,
-    CCSDS_ERR = -1,
-    CCSDS_ERR_VERSION = -2,
-    CCSDS_ERR_TYPE = -3,
-    CCSDS_ERR_SEC_HDR_FLAG = -4,
-    CCSDS_ERR_APID = -5,
-    CCSDS_ERR_SEQ_FLAGS = -6,
-    CCSDS_ERR_SEQ_COUNT = -7,
-    CCSDS_ERR_LENGTH = -8,
-    CCSDS_ERR_COURSE = -9,
-    CCSDS_ERR_FINE = -10
+    CCSDS_ERR_VERSION,
+    CCSDS_ERR_TYPE,
+    CCSDS_ERR_SEC_HDR_FLAG,
+    CCSDS_ERR_APID,
+    CCSDS_ERR_SEQ_FLAGS,
+    CCSDS_ERR_SEQ_COUNT,
+    CCSDS_ERR_LENGTH,
+    CCSDS_ERR_INVALID_ARG,          // NEW: For general bad arguments
+    CCSDS_ERR_UNKNOWN_SEC_HDR_TYPE, // NEW: For unsupported secondary header
 } ccsds_error_t;
 
 /* Function declarations */
@@ -90,6 +88,7 @@ ccsds_error_t build_primary_header(
 
 ccsds_error_t build_secondary_header(
     ccsds_secondary_header_t *hdr,
+    int argc,
     char **argv);
 
 ccsds_error_t validateEncodePacket(ccsds_primary_header_t *h);

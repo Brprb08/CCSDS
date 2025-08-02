@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
             include_sec_hdr = 1;
             
             sec_header.type = CCSDS_SEC_CUC_TIME;
-            ccsds_error_t result = build_secondary_header(&sec_header, argv);
+            ccsds_error_t result = build_secondary_header(&sec_header, argc, argv);
             if(result != 0)
             {
                 printf("Error building secondary header\n");
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
             include_sec_hdr = 1;
 
             sec_header.type = CCSDS_SEC_TC_PUS;
-            ccsds_error_t result = build_secondary_header(&sec_header, argv);
+            ccsds_error_t result = build_secondary_header(&sec_header, argc, argv);
             if(result != 0)
             {
                 printf("Error building secondary header\n");

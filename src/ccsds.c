@@ -74,48 +74,26 @@ ccsds_error_t build_primary_header(
     return CCSDS_OK;
 }
 
-//CHANGE TO AN ERROR ENUM
-int validateArgs(int length, char *argv[])
-{
-    char *endptr;
+ccsds_error_t build_secondary_header(ccsds_secondary_header_t *hdr,
+                                     int argc, char **argv) {
+    if (!hdr) return CCSDS_ERR_INVALID_ARG;
 
-    for(int i = 2; i < length; i++) {
-	errno = 0; // reset errno before the call
-	unsigned long val = strtoul(argv[i], &endptr, 10);
-	if(errno == ERANGE || *endptr != '\0' || val > UINT32_MAX) {
-	    printf("Invalid argument passed for secondary header: %s\n", argv[i]);
-	    return CCSDS_ERR;
-	}
-    }
-    return CCSDS_OK;
-}
+    switch (hdr->type) {
+        case CCSDS_SEC_CUC_TIME:
+            if (argc != 4) return CCSDS_ERR_INVALID_ARG;
+            hdr->data.cuc_time.coarse_time = (uint32_t) strtoul(argv[2], NULL, 10);
+            hdr->data.cuc_time.fine_time   = (uint32_t) strtoul(argv[3], NULL, 10);
+            return CCSDS_OK;
 
-ccsds_error_t build_secondary_header(
-    ccsds_secondary_header_t *hdr,
-    char **argv)
-{
-    switch(hdr->type)
-    {
-	case(CCSDS_SEC_CUC_TIME):
-	    if(validateArgs(4, argv) != 0) {
-		return CCSDS_ERR_VERSION;
-	    }
-	    hdr->data.cuc_time.coarse_time = (uint32_t)strtoul(argv[2], NULL, 10);
-	    hdr->data.cuc_time.fine_time = (uint32_t)strtoul(argv[3], NULL, 10);
-	    return CCSDS_OK;
-	case(CCSDS_SEC_TC_PUS):
-	    if(validateArgs(5, argv) != 0) {
-		return CCSDS_ERR_VERSION;
-	    }
-	    hdr->data.tc_pus.function_code = (uint32_t)strtoul(argv[2], NULL, 10);
-	    hdr->data.tc_pus.checksum = (uint32_t)strtoul(argv[3], NULL, 10);
-	    hdr->data.tc_pus.spare = (uint32_t)strtoul(argv[4], NULL, 10);
-	    return CCSDS_OK;
+        case CCSDS_SEC_TC_PUS:
+            if (argc != 5) return CCSDS_ERR_INVALID_ARG;
+            hdr->data.tc_pus.function_code = (uint8_t) strtoul(argv[2], NULL, 10);
+            hdr->data.tc_pus.checksum      = (uint8_t) strtoul(argv[3], NULL, 10);
+            hdr->data.tc_pus.spare         = (uint8_t) strtoul(argv[4], NULL, 10);
+            return CCSDS_OK;
 
-	default:
-	        return CCSDS_ERR_VERSION;
-
-    return CCSDS_OK;
+        default:
+            return CCSDS_ERR_UNKNOWN_SEC_HDR_TYPE;
     }
 }
 
