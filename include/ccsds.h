@@ -14,7 +14,7 @@ typedef struct
     uint8_t version;      // 3 bits (should usually be 0)
     uint8_t type;         // 1 bit  (0=TM, 1=TC)
     uint8_t sec_hdr_flag; // 1 bit  (1=Secondary Header present)
-    uint16_t apid;        // 11 bits (0-2047)
+    uint16_t apid;        // 11 bits (0-2047) maps to a payload struct
 
     uint8_t seq_flags;  // 2 bits (0-3)
     uint16_t seq_count; // 14 bits (0-16383)
@@ -43,9 +43,9 @@ typedef struct
 		
 		struct
 		{
-			uint32_t function_code;
-			uint32_t checksum;
-			uint32_t spare;
+			uint8_t function_code; // Tells spacecraft what specific function the telecommand should trigger (0-255) (0-63)typically for "standard" missions
+			uint8_t checksum; // Computed checksome value (0-255)
+			uint8_t spare; // Almost always 0. Made for future specs or packet alignment
 		} tc_pus;
 
 	} data;
@@ -63,15 +63,16 @@ typedef struct
 typedef enum
 {
     CCSDS_OK = 0,
-    CCSDS_ERR_VERSION = -1,
-    CCSDS_ERR_TYPE = -2,
-    CCSDS_ERR_SEC_HDR_FLAG = -3,
-    CCSDS_ERR_APID = -4,
-    CCSDS_ERR_SEQ_FLAGS = -5,
-    CCSDS_ERR_SEQ_COUNT = -6,
-    CCSDS_ERR_LENGTH = -7,
-    CCSDS_ERR_COURSE = -8,
-    CCSDS_ERR_FINE = -9
+    CCSDS_ERR = -1,
+    CCSDS_ERR_VERSION = -2,
+    CCSDS_ERR_TYPE = -3,
+    CCSDS_ERR_SEC_HDR_FLAG = -4,
+    CCSDS_ERR_APID = -5,
+    CCSDS_ERR_SEQ_FLAGS = -6,
+    CCSDS_ERR_SEQ_COUNT = -7,
+    CCSDS_ERR_LENGTH = -8,
+    CCSDS_ERR_COURSE = -9,
+    CCSDS_ERR_FINE = -10
 } ccsds_error_t;
 
 /* Function declarations */

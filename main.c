@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #define CCSDS_PRIMARY_HEADER_SIZE 6
-#define CCSDS_SECONDARY_HEADER_SIZE 8
+#define CCSDS_SECONDARY_HEADER_CUC_TIME_SIZE 8
+#define CCSDS_SECONDARY_HEADER_TC_PUS_SIZE 3
 
 int main(int argc, char *argv[])
 {
@@ -15,9 +16,9 @@ int main(int argc, char *argv[])
     } 
     else if (strcmp(argv[1], "CUC_TIME") == 0)
     {
-        if(argc < 4)
+        if(argc < 4 || argc > 4)
         {
-            printf("Need coarse time and fine time arguments when sending CUC_TIME secondary header cmd\n");
+            printf("Need only coarse time and fine time arguments when sending CUC_TIME secondary header cmd\n");
             return EXIT_FAILURE;
         }
     }
@@ -60,13 +61,22 @@ int main(int argc, char *argv[])
                 printf("Error building secondary header\n");
                 return EXIT_FAILURE;
             }
-            // sec_header.data.cuc_time.coarse_time = 1753658202;
-            // sec_header.data.cuc_time.fine_time = 1288490188;
+        } 
+        else if(strcmp(argv[1], "TC_PUS") == 0)
+        {
+            include_sec_hdr = 1;
+
+            sec_header.type = CCSDS_SEC_TC_PUS;
+            ccsds_error_t result = build_secondary_header(&sec_header, argv);
+            if(result != 0)
+            {
+                printf("Error building secondary header\n");
+                return EXIT_FAILURE;
+            }
         }
         else 
         {
-            // CHANGE THIS TO OTHER ARGS
-            printf("CUC_TIME is the only valid cmd at the moment\n");
+            printf("(CUC_TIME, TC_PUS) are the only valid cmds at the moment\n");
             return EXIT_FAILURE;
         }
         // uint32_t coarse = 1753658202; // 0110 1000 1000 0110 1011 0011 0101 1010 = hex(68 86 B3 5A)
@@ -79,10 +89,24 @@ int main(int argc, char *argv[])
         }
     }
 
+    size_t sec_header_len;
     // Maybe calloc later?
     if (include_sec_hdr)
     {
-        raw_size = CCSDS_PRIMARY_HEADER_SIZE + CCSDS_SECONDARY_HEADER_SIZE;
+        switch(sec_header.type)
+        {
+            case(CCSDS_SEC_CUC_TIME):
+                raw_size = CCSDS_PRIMARY_HEADER_SIZE + CCSDS_SECONDARY_HEADER_CUC_TIME_SIZE;
+                sec_header_len = CCSDS_SECONDARY_HEADER_CUC_TIME_SIZE;
+                break;
+            case(CCSDS_SEC_TC_PUS):
+                raw_size = CCSDS_PRIMARY_HEADER_SIZE + CCSDS_SECONDARY_HEADER_TC_PUS_SIZE;
+                sec_header_len = CCSDS_SECONDARY_HEADER_TC_PUS_SIZE;
+                break;
+            default:
+                raw_size = 0;
+        }
+
         raw = malloc(raw_size);
         if (!raw)
         {
@@ -102,7 +126,7 @@ int main(int argc, char *argv[])
     }
 
     // Encode
-    size_t bytes_written = encode_ccsds_packet(raw, &header, &sec_header, CCSDS_SECONDARY_HEADER_SIZE, NULL, 0);
+    size_t bytes_written = encode_ccsds_packet(raw, &header, &sec_header, sec_header_len, NULL, 0);
 
     printf("Encoded header bytes: ");
     for (size_t i = 0; i < bytes_written; i++)
@@ -113,10 +137,6 @@ int main(int argc, char *argv[])
     ccsds_primary_header_t decoded_primary;
     unpack_ccsds_primary_header(raw, &decoded_primary);
 
-    ccsds_secondary_header_t decoded_secondary;
-    decoded_secondary.type = CCSDS_SEC_CUC_TIME;
-    size_t r = unpack_ccsds_secondary_header(raw, &decoded_secondary);
-    printf("Return from unpack second %ld\n", r);
     printf("Decoded Primary:\n");
     printf("  Version: %d\n", decoded_primary.version);
     printf("  Type: %d\n", decoded_primary.type);
@@ -127,10 +147,38 @@ int main(int argc, char *argv[])
     printf("  Length: %d (payload bytes: %d)\n\n",
            decoded_primary.length, decoded_primary.length + 1);
 
-    printf("Decoded Secondary:\n");
-    printf("  Coarse: %" PRIu32 "\n", decoded_secondary.data.cuc_time.coarse_time);
-    printf("  Fine Time: %" PRIu32 "\n", decoded_secondary.data.cuc_time.fine_time);
+    // Decode back secondary header if present
+    if (decoded_primary.sec_hdr_flag) {
+        ccsds_secondary_header_t decoded_secondary;
+        decoded_secondary.type = sec_header.type;  // pass along the same type used during encoding
 
+        size_t r = unpack_ccsds_secondary_header(raw, &decoded_secondary);
+        printf("Return from unpack secondary header: %ld\n", r);
+
+        printf("Decoded Secondary:\n");
+
+        switch (decoded_secondary.type) {
+            case CCSDS_SEC_CUC_TIME:
+                printf("  Coarse Time: %" PRIu32 "\n",
+                       decoded_secondary.data.cuc_time.coarse_time);
+                printf("  Fine Time: %" PRIu32 "\n",
+                       decoded_secondary.data.cuc_time.fine_time);
+                break;
+
+            case CCSDS_SEC_TC_PUS:
+                printf("  Function Code: %u\n",
+                       decoded_secondary.data.tc_pus.function_code);
+                printf("  Checksum: %u\n",
+                       decoded_secondary.data.tc_pus.checksum);
+                printf("  Spare: %u\n",
+                       decoded_secondary.data.tc_pus.spare);
+                break;
+
+            default:
+                printf("  Unknown secondary header type.\n");
+                break;
+        }
+    }
     free(raw);
     return 0;
 }

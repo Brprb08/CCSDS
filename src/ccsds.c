@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <errno.h>
 
 void printError(ccsds_error_t error)
 {
@@ -73,6 +74,22 @@ ccsds_error_t build_primary_header(
     return CCSDS_OK;
 }
 
+//CHANGE TO AN ERROR ENUM
+int validateArgs(int length, char *argv[])
+{
+    char *endptr;
+
+    for(int i = 2; i < length; i++) {
+	errno = 0; // reset errno before the call
+	unsigned long val = strtoul(argv[i], &endptr, 10);
+	if(errno == ERANGE || *endptr != '\0' || val > UINT32_MAX) {
+	    printf("Invalid argument passed for secondary header: %s\n", argv[i]);
+	    return CCSDS_ERR;
+	}
+    }
+    return CCSDS_OK;
+}
+
 ccsds_error_t build_secondary_header(
     ccsds_secondary_header_t *hdr,
     char **argv)
@@ -80,20 +97,23 @@ ccsds_error_t build_secondary_header(
     switch(hdr->type)
     {
 	case(CCSDS_SEC_CUC_TIME):
+	    if(validateArgs(4, argv) != 0) {
+		return CCSDS_ERR_VERSION;
+	    }
 	    hdr->data.cuc_time.coarse_time = (uint32_t)strtoul(argv[2], NULL, 10);
 	    hdr->data.cuc_time.fine_time = (uint32_t)strtoul(argv[3], NULL, 10);
 	    return CCSDS_OK;
-	    default:
-	        return CCSDS_ERR_VERSION;
-    // Validate each field BEFORE writing into the struct
-    // if (coarse < 0)
-    //     return CCSDS_ERR_COURSE;
-    // if (fine < 0)
-    //     return CCSDS_ERR_FINE;
+	case(CCSDS_SEC_TC_PUS):
+	    if(validateArgs(5, argv) != 0) {
+		return CCSDS_ERR_VERSION;
+	    }
+	    hdr->data.tc_pus.function_code = (uint32_t)strtoul(argv[2], NULL, 10);
+	    hdr->data.tc_pus.checksum = (uint32_t)strtoul(argv[3], NULL, 10);
+	    hdr->data.tc_pus.spare = (uint32_t)strtoul(argv[4], NULL, 10);
+	    return CCSDS_OK;
 
-    // Only write to struct if all values are valid
-    //hdr->coarse_time = (uint32_t)coarse;
-    //hdr->fine_time = (uint32_t)fine;
+	default:
+	        return CCSDS_ERR_VERSION;
 
     return CCSDS_OK;
     }
@@ -172,7 +192,10 @@ ccsds_error_t pack_ccsds_secondary_header(uint8_t *buf, const ccsds_secondary_he
 	    // Number of bytes
 	    return 6;
 	case(CCSDS_SEC_TC_PUS):
-	    // Do more Bit-packing
+	    buf[6] = h->data.tc_pus.function_code;
+	    buf[7] = h->data.tc_pus.checksum;
+	    buf[8] = h->data.tc_pus.spare;
+	    // Number of bytes
 	    return 3;
     }
     return CCSDS_OK;
@@ -248,6 +271,9 @@ size_t unpack_ccsds_secondary_header(const uint8_t *buf, ccsds_secondary_header_
 			   (uint32_t)buf[13];
 	    return 6;
 	case(CCSDS_SEC_TC_PUS):
+	    h->data.tc_pus.function_code = buf[6];
+	    h->data.tc_pus.checksum = buf[7];
+	    h->data.tc_pus.spare = buf[8];
 	    return 3;
 	default:
 	    return -1;
