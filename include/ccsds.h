@@ -2,6 +2,7 @@
 #define CCSDS_H
 
 #include <stdint.h>
+#include <stdint.h>
 #include <stddef.h>
 
 /*
@@ -21,11 +22,40 @@ typedef struct
     uint16_t length; // 16 bits (#bytes after header - 1)
 } ccsds_primary_header_t;
 
+typedef enum
+{
+	CCSDS_SEC_NONE = 0,
+	CCSDS_SEC_CUC_TIME, // CCSDS Unsegmented Time Code (8 bytes: 4 coarse, 4 fine)
+	CCSDS_SEC_TC_PUS // ESA PUS Telecommand header (3 bytes: function, checksum, spare)
+} ccsds_sec_type_t;
+
 typedef struct
 {
-    uint32_t coarse_time; // Time since last epoch in seconds (typically Jan 1, 1958) 4 bytes
-    uint32_t fine_time;   // Fractional time from coarse time. Ex. If course time is not exactly right on the second, fine time gives the .5s after. So 80 00 00 00 = 2,147,483,648 / 4,294,967,296 (2^32) = .5
+	ccsds_sec_type_t type;
+
+	union
+	{
+		struct
+		{
+			uint32_t coarse_time;
+			uint32_t fine_time;
+		} cuc_time;
+		
+		struct
+		{
+			uint32_t function_code;
+			uint32_t checksum;
+			uint32_t spare;
+		} tc_pus;
+
+	} data;
 } ccsds_secondary_header_t;
+
+//typedef struct
+//{
+//    uint32_t coarse_time; // Time since last epoch in seconds (typically Jan 1, 1958) 4 bytes
+//    uint32_t fine_time;   // Fractional time from coarse time. Ex. If course time is not exactly right on the second, fine time gives the .5s after. So 80 00 00 00 = 2,147,483,648 / 4,294,967,296 (2^32) = .5
+//} ccsds_secondary_header_t;
 
 /*
  * Error codes for CCSDS operations
@@ -59,8 +89,7 @@ ccsds_error_t build_primary_header(
 
 ccsds_error_t build_secondary_header(
     ccsds_secondary_header_t *hdr,
-    int32_t coarse,
-    int32_t fine);
+    char **argv);
 
 ccsds_error_t validateEncodePacket(ccsds_primary_header_t *h);
 
@@ -75,6 +104,6 @@ size_t encode_ccsds_packet(uint8_t *buf,
 
 void unpack_ccsds_primary_header(const uint8_t *buf, ccsds_primary_header_t *h);
 
-void unpack_ccsds_secondary_header(const uint8_t *buf, ccsds_secondary_header_t *h);
+size_t unpack_ccsds_secondary_header(const uint8_t *buf, ccsds_secondary_header_t *h);
 
 #endif // CCSDS_H

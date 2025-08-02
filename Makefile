@@ -58,5 +58,4 @@ distclean:
 
 # Run the demo program from build/
 run: $(TARGET)
-	./$(TARGET)
-
+	./$(TARGET) $(ARGS)

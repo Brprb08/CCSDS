@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 void printError(ccsds_error_t error)
 {
@@ -74,20 +75,28 @@ ccsds_error_t build_primary_header(
 
 ccsds_error_t build_secondary_header(
     ccsds_secondary_header_t *hdr,
-    uint32_t coarse,
-    uint32_t fine)
+    char **argv)
 {
+    switch(hdr->type)
+    {
+	case(CCSDS_SEC_CUC_TIME):
+	    hdr->data.cuc_time.coarse_time = (uint32_t)strtoul(argv[2], NULL, 10);
+	    hdr->data.cuc_time.fine_time = (uint32_t)strtoul(argv[3], NULL, 10);
+	    return CCSDS_OK;
+	    default:
+	        return CCSDS_ERR_VERSION;
     // Validate each field BEFORE writing into the struct
-    if (coarse < 0)
-        return CCSDS_ERR_COURSE;
-    if (fine < 0)
-        return CCSDS_ERR_FINE;
+    // if (coarse < 0)
+    //     return CCSDS_ERR_COURSE;
+    // if (fine < 0)
+    //     return CCSDS_ERR_FINE;
 
     // Only write to struct if all values are valid
-    hdr->coarse_time = (uint32_t)coarse;
-    hdr->fine_time = (uint32_t)fine;
+    //hdr->coarse_time = (uint32_t)coarse;
+    //hdr->fine_time = (uint32_t)fine;
 
     return CCSDS_OK;
+    }
 }
 
 ccsds_error_t pack_ccsds_primary_header(uint8_t *buf, const ccsds_primary_header_t *h)
@@ -146,16 +155,26 @@ ccsds_error_t pack_ccsds_primary_header(uint8_t *buf, const ccsds_primary_header
 // Fine time = .3 * 2^32 = 1288490188.8 -> truncated = 1288490188
 ccsds_error_t pack_ccsds_secondary_header(uint8_t *buf, const ccsds_secondary_header_t *h)
 {
-    buf[6] = (h->coarse_time >> 24) & 0xFF;
-    buf[7] = (h->coarse_time >> 16) & 0xFF;
-    buf[8] = (h->coarse_time >> 8) & 0xFF;
-    buf[9] = h->coarse_time & 0xFF;
+    switch(h->type)
+    {
+	case(CCSDS_SEC_NONE):
+	    return 0;
+	case(CCSDS_SEC_CUC_TIME):
+	    buf[6] = (h->data.cuc_time.coarse_time >> 24) & 0xFF;
+	    buf[7] = (h->data.cuc_time.coarse_time >> 16) & 0xFF;
+	    buf[8] = (h->data.cuc_time.coarse_time >> 8) & 0xFF;
+	    buf[9] = h->data.cuc_time.coarse_time & 0xFF;
 
-    buf[10] = (h->fine_time >> 24) & 0xFF;
-    buf[11] = (h->fine_time >> 16) & 0xFF;
-    buf[12] = (h->fine_time >> 8) & 0xFF;
-    buf[13] = h->fine_time & 0xFF;
-
+	    buf[10] = (h->data.cuc_time.fine_time >> 24) & 0xFF;
+	    buf[11] = (h->data.cuc_time.fine_time >> 16) & 0xFF;
+	    buf[12] = (h->data.cuc_time.fine_time >> 8) & 0xFF;
+	    buf[13] = h->data.cuc_time.fine_time & 0xFF;
+	    // Number of bytes
+	    return 6;
+	case(CCSDS_SEC_TC_PUS):
+	    // Do more Bit-packing
+	    return 3;
+    }
     return CCSDS_OK;
 }
 
@@ -211,15 +230,26 @@ void unpack_ccsds_primary_header(const uint8_t *buf, ccsds_primary_header_t *h)
     h->length = ((uint16_t)buf[4] << 8) | buf[5];
 }
 
-void unpack_ccsds_secondary_header(const uint8_t *buf, ccsds_secondary_header_t *h)
+size_t unpack_ccsds_secondary_header(const uint8_t *buf, ccsds_secondary_header_t *h)
 {
-    h->coarse_time = ((uint32_t)buf[6] << 24) |
-                     ((uint32_t)buf[7] << 16) |
-                     ((uint32_t)buf[8] << 8) |
-                     (uint32_t)buf[9];
+    switch(h->type)
+    {
+	case(CCSDS_SEC_NONE):
+	    return 0;
+	case(CCSDS_SEC_CUC_TIME):
+	    h->data.cuc_time.coarse_time = ((uint32_t)buf[6] << 24) |
+			     ((uint32_t)buf[7] << 16) |
+			     ((uint32_t)buf[8] << 8) |
+			     (uint32_t)buf[9];
 
-    h->fine_time = ((uint32_t)buf[10] << 24) |
-                   ((uint32_t)buf[11] << 16) |
-                   ((uint32_t)buf[12] << 8) |
-                   (uint32_t)buf[13];
+	    h->data.cuc_time.fine_time = ((uint32_t)buf[10] << 24) |
+			   ((uint32_t)buf[11] << 16) |
+			   ((uint32_t)buf[12] << 8) |
+			   (uint32_t)buf[13];
+	    return 6;
+	case(CCSDS_SEC_TC_PUS):
+	    return 3;
+	default:
+	    return -1;
+    }
 }

@@ -17,3 +17,7 @@ ccsds
 # OS-specific junk
 .DS_Store
 Thumbs.db
+
+.clangd
+FINAL_PROJECT.md
+

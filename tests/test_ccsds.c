@@ -64,20 +64,27 @@ int test_primary_pack_unpack()
 
 int test_secondary_header()
 {
+    // Simulate argv like the real program would pass from CLI
+    char *fake_argv[] = {"program", "CUC_TIME", "1753658202", "1288490188"};
+
     ccsds_secondary_header_t sec_header;
-    uint32_t coarse = 1753658202; // hex(68 86 B3 5A)
-    uint32_t fine = 1288490188;   // hex(4C CC CC CC)
-    ccsds_error_t sec_ok = build_secondary_header(&sec_header, coarse, fine);
+    sec_header.type = CCSDS_SEC_CUC_TIME; // must set type before building
+
+    // Call the real function with fake argv
+    ccsds_error_t sec_ok = build_secondary_header(&sec_header, fake_argv);
     ASSERT_EQ(CCSDS_OK, sec_ok, "Secondary header builder accepts valid input");
 
     uint8_t fake_buf[14] = {0}; // Simulate full packet
     pack_ccsds_secondary_header(fake_buf, &sec_header);
 
+    // Decode back
     ccsds_secondary_header_t sec_decoded;
+    sec_decoded.type = CCSDS_SEC_CUC_TIME;  // must set type before unpacking
     unpack_ccsds_secondary_header(fake_buf, &sec_decoded);
 
-    ASSERT_EQ(sec_header.coarse_time, sec_decoded.coarse_time, "Coarse time preserved");
-    ASSERT_EQ(sec_header.fine_time, sec_decoded.fine_time, "Fine time preserved");
+    // Validate decoded values
+    ASSERT_EQ(sec_header.data.cuc_time.coarse_time, sec_decoded.data.cuc_time.coarse_time, "Coarse time preserved");
+    ASSERT_EQ(sec_header.data.cuc_time.fine_time, sec_decoded.data.cuc_time.fine_time, "Fine time preserved");
     return 0;
 }
 
@@ -97,3 +104,4 @@ int main(void)
     printf("\n All tests passed!\n");
     return 0;
 }
+
