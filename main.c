@@ -36,7 +36,7 @@ int main(void)
 
         uint32_t coarse = 1753658202; // 0110 1000 1000 0110 1011 0011 0101 1010 = hex(68 86 B3 5A)
         uint32_t fine = 1288490188;   // 0100 1100 1100 1100 1100 1100 1100 1100 = hex(4C CC CC CC)
-        ccsds_error_t result = build_secondary_header(&sec_header, coarse, fine);
+        result = build_secondary_header(&sec_header, coarse, fine);
         if (result != CCSDS_OK)
         {
             printError(result);
@@ -44,6 +44,7 @@ int main(void)
         }
     }
 
+    // Maybe calloc later?
     if (include_sec_hdr)
     {
         raw_size = CCSDS_PRIMARY_HEADER_SIZE + CCSDS_SECONDARY_HEADER_SIZE;
@@ -92,7 +93,7 @@ int main(void)
 
     printf("Decoded Secondary:\n");
     printf("  Coarse: %" PRIu32 "\n", decoded_secondary.coarse_time);
-    printf("  Fine Time: %" PRId32 "\n", decoded_secondary.fine_time);
+    printf("  Fine Time: %" PRIu32 "\n", decoded_secondary.fine_time);
 
     free(raw);
     return 0;

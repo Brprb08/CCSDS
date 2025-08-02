@@ -74,8 +74,8 @@ ccsds_error_t build_primary_header(
 
 ccsds_error_t build_secondary_header(
     ccsds_secondary_header_t *hdr,
-    int32_t coarse,
-    int32_t fine)
+    uint32_t coarse,
+    uint32_t fine)
 {
     // Validate each field BEFORE writing into the struct
     if (coarse < 0)
