@@ -1,8 +1,8 @@
 # CCSDS Packet Library
 
-A lightweight C library for **encoding and decoding CCSDS (Consultative Committee for Space Data Systems) packets** — the industry standard format used by NASA, ESA, and many satellites for telemetry and telecommand.
+A lightweight C library for **encoding and decoding CCSDS (Consultative Committee for Space Data Systems) packets**, the industry standard format used by NASA, ESA, and many satellites for telemetry and telecommand.
 
-This started as a way to practice **bit‑level packing in C**, but it’s evolving into a base for working with CCSDS‑formatted data (and could grow into a packet inspection tool).
+This started as a way to practice bit‑level packing in C, but it’s evolving into a base for working with CCSDS‑formatted data (and could grow into a packet inspection tool).
 
 ---
 
@@ -26,7 +26,7 @@ Most satellites and ground systems use it (or a derivative), so understanding it
 ## Example Output
 
 Running the CLI demo:
-
+1. CCSDS Unsegmented Time Code
 ```bash
 ./ccsds_demo CUC_TIME 12345 54321
 ```
@@ -34,7 +34,7 @@ Running the CLI demo:
 Produces:
 ```bash
 [Encoded CCSDS Packet] (14 bytes)
-18 64 80 2A 00 0F 00 00 30 39 00 00 D4 31 
+18 64 80 2A 00 0F 68 8E  C9 C4 7F FF FF FF
 
 [Decoded Primary Header]
   Version: 0
@@ -46,8 +46,33 @@ Produces:
   Packet Length: 15 (payload bytes: 16)
 
 [Decoded Secondary Header] (unpacked 6 bytes)
-  Coarse Time: 12345
-  Fine Time: 54321
+  Coarse Time: 1754188228
+  Fine Time: 2147483647
+```
+
+2. TeleCommand – Packet Utilization Standard
+```bash
+make run ARGS="TC_PUS 17 165 0"
+```
+
+Produces:
+```bash
+[Encoded CCSDS Packet] (9 bytes)
+18 64 80 2A 00 0F 11 A5  00
+
+[Decoded Primary Header]
+  Version: 0
+  Type: 1 (0=Telemetry, 1=Telecommand)
+  Secondary Header Flag: 1
+  APID: 100
+  Sequence Flags: 2
+  Sequence Count: 42
+  Packet Length: 15 (payload bytes: 16)
+
+[Decoded Secondary Header] (unpacked 3 bytes)
+  Function Code: 17
+  Checksum: 165
+  Spare: 0
 ```
 
 ## Building
