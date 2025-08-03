@@ -49,6 +49,7 @@ Produces:
   Coarse Time: 1754188228
   Fine Time: 2147483647
 ```
+---
 
 2. TeleCommand – Packet Utilization Standard
 ```bash
