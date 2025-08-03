@@ -59,7 +59,7 @@ make run ARGS="TC_PUS 17 165 0"
 Produces:
 ```bash
 [Encoded CCSDS Packet] (9 bytes)
-18 64 80 2A 00 0F 11 A5  00
+18 64 80 2A 00 0F 11 A5 00
 
 [Decoded Primary Header]
   Version: 0
