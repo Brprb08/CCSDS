@@ -19,5 +19,6 @@ ccsds
 Thumbs.db
 
 .clangd
+.cache/
 FINAL_PROJECT.md
 

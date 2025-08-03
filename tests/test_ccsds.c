@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <string.h>
-#include "ccsds.h"
+#include "ccsds_types.h"
+#include "ccsds_header.h"
+#include "ccsds_packing.h"
 
 #define ASSERT_EQ(expected, actual, msg)                                    \
     if ((expected) != (actual))                                             \
@@ -65,13 +66,14 @@ int test_primary_pack_unpack()
 int test_secondary_header()
 {
     // Simulate argv like the real program would pass from CLI
+    int fake_argc = 4;
     char *fake_argv[] = {"program", "CUC_TIME", "1753658202", "1288490188"};
 
     ccsds_secondary_header_t sec_header;
     sec_header.type = CCSDS_SEC_CUC_TIME; // must set type before building
 
     // Call the real function with fake argv
-    ccsds_error_t sec_ok = build_secondary_header(&sec_header, fake_argv);
+    ccsds_error_t sec_ok = build_secondary_header(&sec_header, fake_argc, fake_argv);
     ASSERT_EQ(CCSDS_OK, sec_ok, "Secondary header builder accepts valid input");
 
     uint8_t fake_buf[14] = {0}; // Simulate full packet

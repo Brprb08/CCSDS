@@ -13,11 +13,11 @@ TARGET = $(BUILD_DIR)/ccsds_demo
 TEST_TARGET = $(BUILD_DIR)/run_tests
 
 # Sources
-SRCS = $(SRC_DIR)/ccsds.c main.c
-OBJS = $(BUILD_DIR)/ccsds.o $(BUILD_DIR)/main.o
+SRCS = $(SRC_DIR)/ccsds.c $(SRC_DIR)/ccsds_errors.c $(SRC_DIR)/ccsds_header.c $(SRC_DIR)/ccsds_packing.o $(SRC_DIR)/ccsds_encode.c $(SRC_DIR)/ccsds_print.c main.c
+OBJS = $(BUILD_DIR)/ccsds.o $(BUILD_DIR)/ccsds_errors.o $(BUILD_DIR)/ccsds_packing.o $(BUILD_DIR)/ccsds_encode.o $(BUILD_DIR)/ccsds_header.o $(BUILD_DIR)/ccsds_print.o $(BUILD_DIR)/main.o
 
-TEST_SRCS = $(SRC_DIR)/ccsds.c $(TEST_DIR)/test_ccsds.c
-TEST_OBJS = $(BUILD_DIR)/ccsds.o $(BUILD_DIR)/test_ccsds.o
+TEST_SRCS = $(SRC_DIR)/ccsds.c $(SRC_DIR)/ccsds_errors.c $(SRC_DIR)/ccsds_header.c $(SRC_DIR)/ccsds_packing.o $(SRC_DIR)/ccsds_encode.c $(SRC_DIR)/ccsds_print.c $(TEST_DIR)/test_ccsds.c
+TEST_OBJS = $(BUILD_DIR)/ccsds.o $(BUILD_DIR)/ccsds_errors.o $(BUILD_DIR)/ccsds_packing.o $(BUILD_DIR)/ccsds_encode.o $(BUILD_DIR)/ccsds_header.o $(BUILD_DIR)/ccsds_print.o $(BUILD_DIR)/test_ccsds.o
 
 # Default target
 all: $(TARGET)
