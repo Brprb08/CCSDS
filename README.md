@@ -34,7 +34,7 @@ Running the CLI demo:
 Produces:
 ```bash
 [Encoded CCSDS Packet] (14 bytes)
-18 64 80 2A 00 0F 68 8E  C9 C4 7F FF FF FF
+18 64 80 2A 00 0F 68 8E C9 C4 7F FF FF FF
 
 [Decoded Primary Header]
   Version: 0

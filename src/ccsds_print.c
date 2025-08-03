@@ -62,7 +62,6 @@ void print_packet_summary(const uint8_t *raw, size_t bytes_written, const ccsds_
     printf("\n[Encoded CCSDS Packet] (%zu bytes)\n", bytes_written);
     for (size_t i = 0; i < bytes_written; i++) {
         printf("%02X ", raw[i]);
-        if ((i + 1) % 8 == 0) printf(" ");
     }
     printf("\n");
 
