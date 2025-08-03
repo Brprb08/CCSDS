@@ -1,65 +1,89 @@
 # CCSDS Packet Library
 
-This is a small C library for encoding and decoding CCSDS (Consultative Committee for Space Data Systems) space packet headers.  
-I started this as a way to learn low‑level bit packing in C, but it’s turning into a useful base for working with CCSDS‑formatted telemetry and telecommand data.
+A lightweight C library for **encoding and decoding CCSDS (Consultative Committee for Space Data Systems) packets** — the industry standard format used by NASA, ESA, and many satellites for telemetry and telecommand.
 
-## What it does right now
+This started as a way to practice **bit‑level packing in C**, but it’s evolving into a base for working with CCSDS‑formatted data (and could grow into a packet inspection tool).
 
-- Builds and validates a CCSDS **primary header** (6 bytes)
-- Optionally encodes/decodes a **secondary header** (currently just coarse/fine time — 8 bytes)
-- Encodes headers into a byte buffer and unpacks them back into structs
-- Simple example program (`main.c`) showing how to build, encode, and decode a packet
+---
+
+## Features
+
+- Build & validate a CCSDS **Primary Header** (6 bytes)  
+- Encode/decode a **Secondary Header** (currently supports CUC_TIME [coarse/fine time] – 8 bytes)  
+- Serialize headers into raw byte buffers & unpack them back into structs  
+- Includes **unit tests** for packing/unpacking correctness  
+- Simple CLI demo (`main.c`) to build, encode, and decode packets
+
+---
 
 ## Why CCSDS?
 
-CCSDS is a space industry standard for packetizing telemetry/command data for spacecraft.  
-Most satellites and ground systems use some variation of it, so it’s a good format to learn.
+The **CCSDS Space Packet Protocol** is the foundation for spacecraft data exchange.  
+Most satellites and ground systems use it (or a derivative), so understanding it is essential for aerospace software work.
 
-## Next steps / ideas
+---
 
-- Add payload support with length checking
-- Add support for more secondary header types (e.g. command headers)
-- Write unit tests and fuzz tests for decoding
-- Maybe turn this into a tiny CLI tool for inspecting CCSDS packets
+## Example Output
+
+Running the CLI demo:
+
+```bash
+./ccsds_demo CUC_TIME 12345 54321
+```
+
+Produces:
+```bash
+[Encoded CCSDS Packet] (14 bytes)
+18 64 80 2A 00 0F 00 00 30 39 00 00 D4 31 
+
+[Decoded Primary Header]
+  Version: 0
+  Type: 1 (0=Telemetry, 1=Telecommand)
+  Secondary Header Flag: 1
+  APID: 100
+  Sequence Flags: 2
+  Sequence Count: 42
+  Packet Length: 15 (payload bytes: 16)
+
+[Decoded Secondary Header] (unpacked 6 bytes)
+  Coarse Time: 12345
+  Fine Time: 54321
+```
+
+## Building
+You’ll need a C compiler (GCC or Clang).
+
+### Using the Makefile (Linux/macOS/WSL):
+```bash
+make clean       # remove old builds
+make             # compile the project
+make run         # run the compiled demo program
+make test        # run the test suite
+```
+
+### Manual Compile:
+```bash
+gcc -Wall -Wextra -std=c11 -Iinclude src/*.c main.c -o ccsds_demo
+./ccsds_demo
+```
 
 ## Tests
-
-The project includes a small test suite to verify header packing/unpacking.
-
 Run the tests with:
-
 ```bash
 make test
 ```
-
-If everything is correct, you’ll see ✅ messages for each test and:
-
-```
+You’ll see ✅ for each check and:
+```bash
 All tests passed!
 ```
 
-at the end.
+## Next Steps
+- Add payload support with proper length checking
+- Support additional secondary header types (e.g. TC_PUS commands)
+- Expand the CLI into a CCSDS packet inspector
+- Add fuzz tests for robustness
 
-## Building
 
-You’ll need a C compiler (GCC or Clang).
-On Linux/macOS this is usually pre‑installed or easy to get.
-On Windows, you can install GCC via MSYS2 or MinGW (and then the manual gcc command below will work fine).
 
-### Using the Makefile (Linux/macOS/WSL only):
 
-```bash
-make clean     # remove old builds
-make distclean # removes build folder entirely
-make           # compile the project
-make run       # run the compiled program
-```
 
-_(Use `make test` to run the test suite, see the Tests section above.)_
-
-### Compiling manually with gcc
-
-```bash
-gcc -Wall -Wextra -std=c11 -Iinclude src/ccsds.c main.c -o ccsds_demo
-./ccsds_demo
-```

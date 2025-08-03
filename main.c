@@ -136,8 +136,8 @@ int main(int argc, char *argv[])
     // Encode
     size_t bytes_written = encode_ccsds_packet(raw, &header, &sec_header, sec_header_len, NULL, 0);
 
-    print_encode_decode(raw, bytes_written, &sec_header);
-
+    //print_encode_decode(raw, bytes_written, &sec_header);
+    print_packet_summary(raw, bytes_written, &sec_header);
     free(raw);
     return 0;
 }
