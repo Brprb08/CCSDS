@@ -2,7 +2,6 @@
 
 ccsds_error_t pack_ccsds_primary_header(uint8_t *buf, const ccsds_primary_header_t *h)
 {
-
     // Byte 0
     buf[0] = ((h->version & 0x07) << 5) |
              ((h->type & 0x01) << 4) |
@@ -45,7 +44,7 @@ ccsds_error_t pack_ccsds_secondary_header(uint8_t *buf, const ccsds_secondary_he
 	    buf[12] = (h->data.cuc_time.fine_time >> 8) & 0xFF;
 	    buf[13] = h->data.cuc_time.fine_time & 0xFF;
 	    // Number of bytes
-	    return 6;
+	    return 8;
 	case(CCSDS_SEC_TC_PUS):
 	    buf[6] = h->data.tc_pus.function_code;
 	    buf[7] = h->data.tc_pus.checksum;
@@ -92,7 +91,7 @@ size_t unpack_ccsds_secondary_header(const uint8_t *buf, ccsds_secondary_header_
 	    h->data.tc_pus.spare = buf[8];
 	    return 3;
 	default:
-	    return -1;
+	    return CCSDS_ERR_UNKNOWN_SEC_HDR_TYPE;
     }
 }
 

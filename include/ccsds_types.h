@@ -32,13 +32,22 @@ typedef enum {
 
 // STRUCTS
 typedef struct {
-    uint8_t version;
-    uint8_t type;
-    uint8_t sec_hdr_flag;
-    uint16_t apid;
-    uint8_t seq_flags;
-    uint16_t seq_count;
-    uint16_t length;
+    uint8_t version;         // 3 bits: CCSDS version number (usually 0)
+    uint8_t type;            // 1 bit: 0 = telemetry, 1 = telecommand
+    uint8_t sec_hdr_flag;    // 1 bit: 1 = secondary header is present, 0 = not present
+
+    uint16_t apid;           // 11 bits: Application Process ID — identifies the packet's source or destination application
+
+    uint8_t seq_flags;       // 2 bits: Sequence flags
+                             //   00 = continuation segment
+                             //   01 = first segment
+                             //   10 = last segment
+                             //   11 = unsegmented (most common)
+
+    uint16_t seq_count;      // 14 bits: Packet sequence count (incrementing counter per APID, wraps at 16383)
+
+    uint16_t length;         // 16 bits: Packet length = (total_packet_length - 1 - 6)
+                             // (does NOT include the 6-byte primary header itself)
 } ccsds_primary_header_t;
 
 typedef struct {
@@ -56,5 +65,32 @@ typedef struct {
         } tc_pus;
     } data;
 } ccsds_secondary_header_t;
+
+// Represents a single parameter (field) in the packet
+typedef struct {
+    const char* name;        // Parameter name
+    uint16_t bit_offset;     // Bit offset within the packet
+    uint16_t bit_length;     // Length in bits
+    const char* data_type;   // e.g., "uint8", "float32", etc.
+    void* default_value;     // Pointer to default value (if any)
+} TC_ParameterDef;
+
+typedef struct {
+    const char* name;                // Command name, e.g., "TC_PUS"
+    uint16_t apid;                   // CCSDS APID
+    uint8_t type;                    // 0 = telemetry, 1 = telecommand
+    uint8_t sec_hdr_flag;           // 1 = secondary header present
+    ccsds_sec_type_t sec_type;      // CCSDS_SEC_NONE / CCSDS_SEC_CUC_TIME / CCSDS_SEC_TC_PUS
+    uint8_t seq_flags;              // Typically 3 (unsegmented)
+    uint8_t service_type;           // PUS: service type
+    uint8_t service_subtype;        // PUS: service subtype
+
+    const ccsds_secondary_header_t* sec_hdr_template; // optional default values
+    const TC_ParameterDef* parameters; // payload parameter layout
+    uint16_t num_parameters;
+
+    uint16_t static_payload_len_bytes; // optional, or calculated from parameters
+} CommandDefinition;
+
 
 #endif // CCSDS_TYPES_H

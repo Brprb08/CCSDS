@@ -8,6 +8,7 @@
 #include "ccsds_print.h"
 #include "ccsds_encode.h"
 #include "ccsds_types.h"
+#include "command_registry.h"
 #define CCSDS_PRIMARY_HEADER_SIZE 6
 #define CCSDS_SECONDARY_HEADER_CUC_TIME_SIZE 8
 #define CCSDS_SECONDARY_HEADER_TC_PUS_SIZE 3
@@ -77,17 +78,29 @@ int main(int argc, char *argv[])
     uint8_t *raw;
     size_t raw_size;
 
+    const CommandDefinition* cmd = find_command_by_name(argv[1]);
+    if(!cmd) {
+        printf("This command is not allowed: %s\n", argv[1]);
+        return EXIT_FAILURE;
+    }
+
     ccsds_primary_header_t header;
     int32_t version = 0;
-    int32_t type = 1;
-    int32_t sec_hdr_flag = 1;
-    int32_t apid = 100;
-    int32_t seq_flags = 2;
-    int32_t seq_count = 42;
-    int32_t length = 15;
+    
+    // FIND A WAY TO TRACK THIS, wraps at 16383, 14 bit counter
+    int32_t seq_count = 0;
+
+    int32_t length;
+    if(cmd->sec_hdr_flag == 1){
+        length = get_secondary_header_size(cmd->sec_type) + cmd->static_payload_len_bytes - 1;
+    }
+    else 
+    {
+        length = cmd->static_payload_len_bytes - 1;
+    }
 
     // Validate and build primary header
-    ccsds_error_t result = build_primary_header(&header, version, type, sec_hdr_flag, apid, seq_flags, seq_count, length);
+    ccsds_error_t result = build_primary_header(&header, version, cmd->type, cmd->sec_hdr_flag, cmd->apid, cmd->seq_flags, seq_count, length);
     if (result != CCSDS_OK)
     {
         printError(result);
@@ -133,10 +146,8 @@ int main(int argc, char *argv[])
         }        
     }
 
-    // Encode
     size_t bytes_written = encode_ccsds_packet(raw, &header, &sec_header, sec_header_len, NULL, 0);
 
-    //print_encode_decode(raw, bytes_written, &sec_header);
     print_packet_summary(raw, bytes_written, &sec_header);
     free(raw);
     return 0;

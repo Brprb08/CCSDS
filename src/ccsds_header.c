@@ -2,6 +2,23 @@
 #include <stdlib.h>
 #include "ccsds_header.h"
 
+size_t get_secondary_header_size(ccsds_sec_type_t type) {
+    switch (type) {
+        case CCSDS_SEC_NONE:
+            return 0;
+
+        case CCSDS_SEC_CUC_TIME:
+            return sizeof(((ccsds_secondary_header_t*)0)->data.cuc_time);
+        
+        case CCSDS_SEC_TC_PUS:
+            return sizeof(((ccsds_secondary_header_t*)0)->data.tc_pus);
+        
+        default:
+            return 0; // or error
+    }
+}
+
+
 ccsds_error_t build_primary_header(
     ccsds_primary_header_t *hdr,
     int32_t version,
