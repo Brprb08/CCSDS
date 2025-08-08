@@ -1,0 +1,8 @@
+#ifndef CCSDS_DEFS_H
+#define CCSDS_DEFS_H
+
+#define CCSDS_PRIMARY_HEADER_SIZE 6
+
+#define CCSDS_MAX_PACKET_SIZE  2048
+
+#endif

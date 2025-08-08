@@ -9,7 +9,7 @@
 #include "ccsds_encode.h"
 #include "ccsds_types.h"
 #include "command_registry.h"
-#define CCSDS_PRIMARY_HEADER_SIZE 6
+#include "ccsds_defs.h"
 #define CCSDS_SECONDARY_HEADER_CUC_TIME_SIZE 8
 #define CCSDS_SECONDARY_HEADER_TC_PUS_SIZE 3
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     // FIND A WAY TO TRACK THIS, wraps at 16383, 14 bit counter
     int32_t seq_count = 0;
 
-    int32_t length;
+    size_t length;
     if(cmd->sec_hdr_flag == 1){
         length = get_secondary_header_size(cmd->sec_type) + cmd->static_payload_len_bytes - 1;
     }
@@ -109,7 +109,6 @@ int main(int argc, char *argv[])
 
     // Validate and build secondary header if flag is set
     ccsds_secondary_header_t sec_header = {0};
-    size_t sec_header_len;
     if(header.sec_hdr_flag == 1)
     {
         validate_build_sec_header(&sec_header, argc, argv);
@@ -118,11 +117,9 @@ int main(int argc, char *argv[])
         {
             case(CCSDS_SEC_CUC_TIME):
                 raw_size = CCSDS_PRIMARY_HEADER_SIZE + CCSDS_SECONDARY_HEADER_CUC_TIME_SIZE;
-                sec_header_len = CCSDS_SECONDARY_HEADER_CUC_TIME_SIZE;
                 break;
             case(CCSDS_SEC_TC_PUS):
                 raw_size = CCSDS_PRIMARY_HEADER_SIZE + CCSDS_SECONDARY_HEADER_TC_PUS_SIZE;
-                sec_header_len = CCSDS_SECONDARY_HEADER_TC_PUS_SIZE;
                 break;
             default:
                 raw_size = 0;
@@ -136,7 +133,6 @@ int main(int argc, char *argv[])
         }        
     }
     else {
-        sec_header_len = 0;
         raw_size = CCSDS_PRIMARY_HEADER_SIZE;
         raw = malloc(raw_size);
         if (!raw)
@@ -146,8 +142,15 @@ int main(int argc, char *argv[])
         }        
     }
 
-    size_t bytes_written = encode_ccsds_packet(raw, &header, &sec_header, sec_header_len, NULL, 0);
+    size_t bytes_written = encode_ccsds_packet(raw,
+                              CCSDS_MAX_PACKET_SIZE,   // <-- this is buf_len
+                              &header,
+                              &sec_header,
+                              NULL,
+                              0,
+                              &length);
 
+       // encode_ccsds_packet(raw, &header, &sec_header, sec_header_len, NULL, 0);
     print_packet_summary(raw, bytes_written, &sec_header);
     free(raw);
     return 0;

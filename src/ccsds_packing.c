@@ -1,7 +1,12 @@
 #include "ccsds_types.h"
-
-ccsds_error_t pack_ccsds_primary_header(uint8_t *buf, const ccsds_primary_header_t *h)
+#include "ccsds_defs.h"
+#include <stddef.h>
+#include <stdio.h>
+ccsds_error_t pack_ccsds_primary_header(uint8_t *buf, size_t buf_len, const ccsds_primary_header_t *h, size_t *out_len)
 {
+    if(buf_len < CCSDS_MAX_PACKET_SIZE){
+        return CCSDS_ERR_LENGTH;
+    }
     // Byte 0
     buf[0] = ((h->version & 0x07) << 5) |
              ((h->type & 0x01) << 4) |
@@ -21,36 +26,46 @@ ccsds_error_t pack_ccsds_primary_header(uint8_t *buf, const ccsds_primary_header
     // Bytes 4–5: Packet length
     buf[4] = (h->length >> 8) & 0xFF;
     buf[5] = h->length & 0xFF;
-
+    
+    *out_len = CCSDS_PRIMARY_HEADER_SIZE;
     return CCSDS_OK;
 }
 
 // CUC time = CCSDS Unsegmented Time Code
 // Fine time = .3 * 2^32 = 1288490188.8 -> truncated = 1288490188
-ccsds_error_t pack_ccsds_secondary_header(uint8_t *buf, const ccsds_secondary_header_t *h)
+
+ccsds_error_t pack_ccsds_secondary_header(uint8_t *buf, size_t buf_len, const ccsds_secondary_header_t *h, size_t *out_len)
 {
+    // This if avoids a warning of buf len not getting used remove later
+    if(buf_len) {
+        //do nothing
+    }
+
     switch(h->type)
     {
 	case(CCSDS_SEC_NONE):
-	    return 0;
+	    *out_len = 0;
+        return 0;
 	case(CCSDS_SEC_CUC_TIME):
-	    buf[6] = (h->data.cuc_time.coarse_time >> 24) & 0xFF;
-	    buf[7] = (h->data.cuc_time.coarse_time >> 16) & 0xFF;
-	    buf[8] = (h->data.cuc_time.coarse_time >> 8) & 0xFF;
-	    buf[9] = h->data.cuc_time.coarse_time & 0xFF;
+        buf[0] = (h->data.cuc_time.coarse_time >> 24) & 0xFF;
+	    buf[1] = (h->data.cuc_time.coarse_time >> 16) & 0xFF;
+	    buf[2] = (h->data.cuc_time.coarse_time >> 8) & 0xFF;
+	    buf[3] = h->data.cuc_time.coarse_time & 0xFF;
 
-	    buf[10] = (h->data.cuc_time.fine_time >> 24) & 0xFF;
-	    buf[11] = (h->data.cuc_time.fine_time >> 16) & 0xFF;
-	    buf[12] = (h->data.cuc_time.fine_time >> 8) & 0xFF;
-	    buf[13] = h->data.cuc_time.fine_time & 0xFF;
+	    buf[4] = (h->data.cuc_time.fine_time >> 24) & 0xFF;
+	    buf[5] = (h->data.cuc_time.fine_time >> 16) & 0xFF;
+	    buf[6] = (h->data.cuc_time.fine_time >> 8) & 0xFF;
+	    buf[7] = h->data.cuc_time.fine_time & 0xFF;
 	    // Number of bytes
-	    return 8;
+	    *out_len = 8;
+        return 8;
 	case(CCSDS_SEC_TC_PUS):
-	    buf[6] = h->data.tc_pus.function_code;
-	    buf[7] = h->data.tc_pus.checksum;
-	    buf[8] = h->data.tc_pus.spare;
+	    buf[0] = h->data.tc_pus.function_code;
+	    buf[1] = h->data.tc_pus.checksum;
+	    buf[2] = h->data.tc_pus.spare;
 	    // Number of bytes
-	    return 3;
+	    *out_len = 3;
+        return 3;
     }
     return CCSDS_OK;
 }

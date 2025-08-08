@@ -1,5 +1,6 @@
 #include "ccsds_types.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include "ccsds_header.h"
 
 size_t get_secondary_header_size(ccsds_sec_type_t type) {
@@ -60,7 +61,6 @@ ccsds_error_t build_primary_header(
 ccsds_error_t build_secondary_header(ccsds_secondary_header_t *hdr,
                                      int argc, char **argv) {
     if (!hdr) return CCSDS_ERR_INVALID_ARG;
-
     switch (hdr->type) {
         case CCSDS_SEC_CUC_TIME:
             if (argc != 4) return CCSDS_ERR_INVALID_ARG;

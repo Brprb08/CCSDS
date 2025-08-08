@@ -1,8 +1,9 @@
 #include <stdio.h>
+#include "ccsds_defs.h"
 #include "ccsds_types.h"
 #include "ccsds_header.h"
 #include "ccsds_packing.h"
-
+#include <stdlib.h>
 #define ASSERT_EQ(expected, actual, msg)                                    \
     if ((expected) != (actual))                                             \
     {                                                                       \
@@ -48,7 +49,8 @@ int test_primary_pack_unpack()
     build_primary_header(&header, 0, 1, 1, 100, 3, 16383, 65535);
 
     uint8_t raw[6];
-    pack_ccsds_primary_header(raw, &header);
+    size_t written = 0;
+    pack_ccsds_primary_header(raw, CCSDS_MAX_PACKET_SIZE, &header, &written);
 
     ccsds_primary_header_t decoded;
     unpack_ccsds_primary_header(raw, &decoded);
@@ -77,7 +79,8 @@ int test_secondary_header()
     ASSERT_EQ(CCSDS_OK, sec_ok, "Secondary header builder accepts valid input");
 
     uint8_t fake_buf[14] = {0}; // Simulate full packet
-    pack_ccsds_secondary_header(fake_buf, &sec_header);
+    size_t written = 0;
+    pack_ccsds_secondary_header(fake_buf+ 6, CCSDS_MAX_PACKET_SIZE, &sec_header, &written);
 
     // Decode back
     ccsds_secondary_header_t sec_decoded;
