@@ -1,61 +1,74 @@
 # Compiler and flags
-CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -g -Iinclude
+CC      = gcc
+CFLAGS  = -Wall -Wextra -std=c11 -g -Iinclude
+LDFLAGS =
 
 # Directories
-SRC_DIR = src
-INC_DIR = include
-TEST_DIR = tests
+SRC_DIR   = src
+INC_DIR   = include
+TEST_DIR  = tests
 BUILD_DIR = build
 
-# Executable names (now stored in build/)
-TARGET = $(BUILD_DIR)/ccsds_demo
+# Binaries
+TARGET      = $(BUILD_DIR)/ccsds_demo
 TEST_TARGET = $(BUILD_DIR)/run_tests
 
-# Sources
-SRCS = $(SRC_DIR)/ccsds.c $(SRC_DIR)/ccsds_errors.c $(SRC_DIR)/ccsds_header.c $(SRC_DIR)/ccsds_packing.o $(SRC_DIR)/ccsds_encode.c $(SRC_DIR)/telecommands.c $(SRC_DIR)/command_registry.c $(SRC_DIR)/ccsds_print.c main.c
-OBJS = $(BUILD_DIR)/ccsds.o $(BUILD_DIR)/ccsds_errors.o $(BUILD_DIR)/ccsds_packing.o $(BUILD_DIR)/ccsds_encode.o $(BUILD_DIR)/ccsds_header.o $(BUILD_DIR)/ccsds_print.o $(SRC_DIR)/telecommands.o $(SRC_DIR)/command_registry.o $(BUILD_DIR)/main.o
+# --- source discovery ---
+SRC_CS     = $(wildcard $(SRC_DIR)/*.c)
+APP_SRCS   = $(SRC_CS) main.c
 
-TEST_SRCS = $(SRC_DIR)/ccsds.c $(SRC_DIR)/ccsds_errors.c $(SRC_DIR)/ccsds_header.c $(SRC_DIR)/ccsds_packing.o $(SRC_DIR)/ccsds_encode.c $(SRC_DIR)/ccsds_print.c $(TEST_DIR)/test_ccsds.c
-TEST_OBJS = $(BUILD_DIR)/ccsds.o $(BUILD_DIR)/ccsds_errors.o $(BUILD_DIR)/ccsds_packing.o $(BUILD_DIR)/ccsds_encode.o $(BUILD_DIR)/ccsds_header.o $(BUILD_DIR)/ccsds_print.o $(BUILD_DIR)/test_ccsds.o
+# tests: list your new modular test files explicitly
+TEST_ONLY_CS = $(TEST_DIR)/test_main.c \
+               $(TEST_DIR)/test_primary_header.c \
+               $(TEST_DIR)/test_secondary_header.c
+TEST_SRCS    = $(SRC_CS) $(TEST_ONLY_CS)
 
-# Default target
+# --- objects (mirror everything into build/) ---
+APP_OBJS  = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_CS)) \
+            $(BUILD_DIR)/main.o
+
+TEST_OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_CS)) \
+            $(patsubst $(TEST_DIR)/%.c,$(BUILD_DIR)/%.o,$(TEST_ONLY_CS))
+
+# Phony
+.PHONY: all test clean distclean run
+
+# Default
 all: $(TARGET)
 
-# Build demo executable (in build/)
-$(TARGET): $(OBJS)
-	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -o $@ $^
+# App link
+$(TARGET): $(APP_OBJS) | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Build test executable (in build/)
-test: $(TEST_OBJS)
-	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -o $(TEST_TARGET) $^
+# Test link + run
+test: $(TEST_TARGET)
 	./$(TEST_TARGET)
 
-# Compile from src/
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(BUILD_DIR)
+$(TEST_TARGET): $(TEST_OBJS) | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+# Pattern rules: compile to build/
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compile from tests/
-$(BUILD_DIR)/%.o: $(TEST_DIR)/%.c
-	@mkdir -p $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(TEST_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compile main.c in root
-$(BUILD_DIR)/%.o: %.c
-	@mkdir -p $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean just objects & binaries
+# Ensure build dir exists
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Run the demo
+run: $(TARGET)
+	./$(TARGET) $(ARGS)
+
+# Cleaning
 clean:
 	rm -f $(BUILD_DIR)/*.o $(TARGET) $(TEST_TARGET)
 
-# Deep clean: wipe build folder entirely
 distclean:
 	rm -rf $(BUILD_DIR)
 
-# Run the demo program from build/
-run: $(TARGET)
-	./$(TARGET) $(ARGS)
